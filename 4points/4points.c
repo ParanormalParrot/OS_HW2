@@ -1,4 +1,3 @@
-// Именованные семафоры POSIX и разделяемая память POSIX.
 #include <fcntl.h>
 #include <semaphore.h>
 #include <signal.h>
@@ -8,10 +7,13 @@
 #include <time.h>
 #include <unistd.h>
 #include <limits.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #define SHM_NAME "/shared_memory"
 #define SEM_NAME "/semaphore"
-#define ARRAY_SIZE 1024
+#define ARRAY_SIZE 1000
+
 
 // Структура для разделяемой памяти.
 typedef struct {
@@ -87,9 +89,9 @@ int main(int argc, char *argv[]) {
                 int tmp = row[j];
                 row[j] = row[min];
                 row[min] = tmp;
-                printf("Student %d inserted book %d at the position %d of the bookshelf %d in a row %d \n", i + 1, row[j],
+                printf("Student %d have inserted book %d at the position %d of the bookshelf %d in the row %d.\n", i + 1, row[j],
                        (j % k + 1), (j / n + 1), i + 1);
-                usleep(rand() % 10);
+                usleep(rand()%10);
                 sem_post(semaphore);
             }
             sem_wait(semaphore);
@@ -99,7 +101,7 @@ int main(int argc, char *argv[]) {
             }
             sem_post(semaphore);
 
-            printf("Student %d finished sorting his subcatalogue and passed it to the librarian\n", i);
+            printf("Student %d have finished sorting his subcatalogue and passed it to the librarian.\n", i + 1);
             exit(0);
         }
     }
@@ -127,12 +129,12 @@ int main(int argc, char *argv[]) {
     }
 
 
-    printf("Complete Catalogue");
+    printf("The librarian have completed the catalogue.\n");
     for (
             int i = 0;
             i < m * n * k;
             ++i) {
-        printf("Book %d %d %d %d\n", shared_mem->books[i], i / m, i / n / m, i % k);
+        printf("Book %d at the position %d of the bookshelf %d in the row %d.\n", shared_mem->books[i], (i / m)+1, (i / n / m)+1, (i % k)+1);
 
     }
 

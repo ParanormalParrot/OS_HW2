@@ -1,4 +1,3 @@
-// Именованные семафоры POSIX и разделяемая память POSIX.
 #include <fcntl.h>
 #include <semaphore.h>
 #include <signal.h>
@@ -8,6 +7,8 @@
 #include <time.h>
 #include <unistd.h>
 #include <limits.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #define SHM_NAME "/shared_memory"
 #define SEM_NAME "/semaphore"
@@ -16,7 +17,7 @@
 // Структура для разделяемой памяти.
 typedef struct {
     int books[ARRAY_SIZE];
-    sem_t semaphore;
+    int m, n, k;
 } shm_struct;
 
 // Указатели на разделяемую память и семафор.
@@ -43,10 +44,9 @@ void signal_handler(int signal) {
 
 int main(int argc, char *argv[]) {
     srand(time(NULL));
-
     // Обработка аргументов командной строки.
     if (argc < 4) {
-        printf("Incorrect number of arguments\n");
+        printf("Invalid number of arguments\n");
         return 1;
     }
     m = atoi(argv[1]);
@@ -56,6 +56,8 @@ int main(int argc, char *argv[]) {
     // Обработка сигналов.
     signal(SIGINT, signal_handler);
 
+    // Создание семафора.
+    semaphore = sem_open(SEM_NAME, O_CREAT, 0644, ARRAY_SIZE);
 
     // Создание разделяемой памяти.
     shmid = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0644);
@@ -65,56 +67,23 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < m * n * k; ++i) {
         shared_mem->books[i] = rand() % 1000;
     }
+    shared_mem->m = m;
+    shared_mem->n = n;
+    shared_mem->k = k;
 
-    // Создание семафора.
-    sem_init(&shared_mem->semaphore, 1, num_bees);
 
     // Создание дочерних процессов-студентов(их количество равно количеству рядов)
     for (int i = 0; i < m; i++) {
         if (fork() == 0) { // дочерний процесс.
-            sem_wait(&shared_mem->semaphore);
-            int row[n * k];
-            for (int j = 0; j < n * k; ++j) {
-                row[j] = shared_mem->books[j + i * n * k];
-            }
-            sem_post(&shared_mem->semaphore);
-            for (int j = 0; j < n * k - 1; ++j) {
-                sem_wait(&shared_mem->semaphore);
-                int min = j;
-                for (int l = j + 1; l < n * k; ++l) {
-                    if (row[j] < row[l]) {
-                        min = l;
-                    }
-                }
-                int tmp = row[j];
-                row[j] = row[min];
-                row[min] = tmp;
-                printf("Student %d have inserted book %d at the position %d of the bookshelf %d in a row %d.\n", i + 1, row[j],
-                       (j % k + 1), (j / n + 1), i + 1);
-                usleep(rand() % 10);
-                sem_post(&shared_mem->semaphore);
-            }
-            sem_wait(&shared_mem->semaphore);
-            for (int j = 0; j < n * k; ++j) {
-                shared_mem->books[j + i * n * k] = row[j];
-
-            }
-            sem_post(semaphore);
-
-            printf("Student %d have finished sorting his subcatalogue and passed it to the librarian.\n", i + 1);
+            char str[sizeof(int)];
+            sprintf(str, "%d", i);
+            execl("./7points_student", "./7points_student", str, NULL);
             exit(0);
         }
     }
+    sleep(3);
 
 
-    for (int i = 0; i < m; i++) {
-        sem_post(&shared_mem->semaphore);
-    }
-
-    // Ожидание завершения дочерних процессов.
-    for (int i = 0; i < m; i++) {
-        wait(NULL);
-    }
     for (int i = 0; i < m * n * k - 1; ++i) {
         int min = i;
         for (int j = i + 1; j < m * n * k; ++j) {
@@ -129,18 +98,16 @@ int main(int argc, char *argv[]) {
     }
 
 
-    printf("The librarian have completed the catalogue.\n");
+    printf("Complete Catalogue\n");
     for (
             int i = 0;
             i < m * n * k;
             ++i) {
-        printf("Book %d at the position %d of the bookshelf %d in the row %d.\n", shared_mem->books[i], (i / m)+1, (i / n / m)+1, (i % k)+1);
-
+        printf("Book %d %d %d %d\n", shared_mem->books[i], i / m, i / n / m, i % k);
 
     }
 
 // Освобождение ресурсов.
     cleanup();
 
-    return 0;
 }
