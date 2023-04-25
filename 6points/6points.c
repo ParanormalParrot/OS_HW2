@@ -75,30 +75,30 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < m * n * k; ++i) {
         shared_mem->books[i] = rand() % 1000;
     }
-    struct sembuf my_buf;
+    struct sembuf buf;
 
     // Создание дочерних процессов-студентов(их количество равно количеству рядов)
     for (int i = 0; i < m; i++) {
         if (fork() == 0) { // дочерний процесс.
-            my_buf.sem_num = 0;
-            my_buf.sem_op = -1;
-            my_buf.sem_flg = 0;
-            semop(semid, &my_buf, 1);
+            buf.sem_num = 0;
+            buf.sem_op = -1;
+            buf.sem_flg = 0;
+            semop(semid, &buf, 1);
             // Процесс-студент создаёт подмассив массива книг.
             int row[n * k];
             for (int j = 0; j < n * k; ++j) {
                 row[j] = shared_mem->books[j + i * n * k];
             }
-            my_buf.sem_num = 0;
-            my_buf.sem_op = 1;
-            my_buf.sem_flg = 0;
-            semop(semid, &my_buf, 1);
+            buf.sem_num = 0;
+            buf.sem_op = 1;
+            buf.sem_flg = 0;
+            semop(semid, &buf, 1);
             // Сортировка выбором
             for (int j = 0; j < n * k - 1; ++j) {
-                my_buf.sem_num = 0;
-                my_buf.sem_op = -1;
-                my_buf.sem_flg = 0;
-                semop(semid, &my_buf, 1);
+                buf.sem_num = 0;
+                buf.sem_op = -1;
+                buf.sem_flg = 0;
+                semop(semid, &buf, 1);
                 int min = j;
                 for (int l = j + 1; l < n * k; ++l) {
                     if (row[l] < row[min]) {
@@ -111,24 +111,24 @@ int main(int argc, char *argv[]) {
                 printf("Student %d have inserted book %d at the position %d of the bookshelf %d in the row %d.\n", i + 1, row[j],
                        (j % k + 1), (j / n + 1), i + 1);
                 usleep(rand()%10);
-                my_buf.sem_num = 0;
-                my_buf.sem_op = 1;
-                my_buf.sem_flg = 0;
-                semop(semid, &my_buf, 1);
+                buf.sem_num = 0;
+                buf.sem_op = 1;
+                buf.sem_flg = 0;
+                semop(semid, &buf, 1);
             }
-            my_buf.sem_num = 0;
-            my_buf.sem_op = -1;
-            my_buf.sem_flg = 0;
-            semop(semid, &my_buf, 1);
+            buf.sem_num = 0;
+            buf.sem_op = -1;
+            buf.sem_flg = 0;
+            semop(semid, &buf, 1);
             // Поток передаёт отсортированные значения обратно в массив  в разделённой памяти
             for (int j = 0; j < n * k; ++j) {
                 shared_mem->books[j + i * n * k] = row[j];
 
             }
-            my_buf.sem_num = 0;
-            my_buf.sem_op = 1;
-            my_buf.sem_flg = 0;
-            semop(semid, &my_buf, 1);
+            buf.sem_num = 0;
+            buf.sem_op = 1;
+            buf.sem_flg = 0;
+            semop(semid, &buf, 1);
 
             printf("Student %d have finished sorting his subcatalogue and passed it to the librarian.\n", i + 1);
             exit(0);
@@ -137,10 +137,10 @@ int main(int argc, char *argv[]) {
 
 
     for (int i = 0; i < m; i++) {
-        my_buf.sem_num = 0;
-        my_buf.sem_op = -1;
-        my_buf.sem_flg = 0;
-        semop(semid, &my_buf, 1);
+        buf.sem_num = 0;
+        buf.sem_op = -1;
+        buf.sem_flg = 0;
+        semop(semid, &buf, 1);
     }
 
     // Ожидание завершения дочерних процессов.

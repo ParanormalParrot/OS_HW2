@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     // Открытие семафора.
     key_t semkey = ftok("semfile", 1);
     semid = semget(semkey, 1, 0666);
-    struct sembuf my_buf;
+    struct sembuf buf;
 
     // Открытие разделяемой памяти.
     key_t shmkey = ftok("shmfile", 1);
@@ -53,10 +53,10 @@ int main(int argc, char *argv[]) {
 
 
     // Создание дочерних процессов-студентов(их количество равно количеству рядов)
-    my_buf.sem_num = 0;
-    my_buf.sem_op = -1;
-    my_buf.sem_flg = 0;
-    semop(semid, &my_buf, 1);
+    buf.sem_num = 0;
+    buf.sem_op = -1;
+    buf.sem_flg = 0;
+    semop(semid, &buf, 1);
     int m = shared_mem->m;
     int n = shared_mem->n;
     int k = shared_mem->k;
@@ -65,16 +65,16 @@ int main(int argc, char *argv[]) {
     for (int j = 0; j < n * k; ++j) {
         row[j] = shared_mem->books[j + row_index * n * shared_mem->k];
     }
-    my_buf.sem_num = 0;
-    my_buf.sem_op = 1;
-    my_buf.sem_flg = 0;
-    semop(semid, &my_buf, 1);
+    buf.sem_num = 0;
+    buf.sem_op = 1;
+    buf.sem_flg = 0;
+    semop(semid, &buf, 1);
     // Сортировка выбором
     for (int j = 0; j < n * k - 1; ++j) {
-        my_buf.sem_num = 0;
-        my_buf.sem_op = -1;
-        my_buf.sem_flg = 0;
-        semop(semid, &my_buf, 1);
+        buf.sem_num = 0;
+        buf.sem_op = -1;
+        buf.sem_flg = 0;
+        semop(semid, &buf, 1);
         int min = j;
         for (int l = j + 1; l < n * k; ++l) {
             if (row[l] < row[min]) {
@@ -88,25 +88,25 @@ int main(int argc, char *argv[]) {
                row[j],
                (j % k + 1), (j / n + 1), row_index + 1);
         usleep(rand() % 10);
-        my_buf.sem_num = 0;
-        my_buf.sem_op = 1;
-        my_buf.sem_flg = 0;
-        semop(semid, &my_buf, 1);
+        buf.sem_num = 0;
+        buf.sem_op = 1;
+        buf.sem_flg = 0;
+        semop(semid, &buf, 1);
 
     }
-    my_buf.sem_num = 0;
-    my_buf.sem_op = -1;
-    my_buf.sem_flg = 0;
-    semop(semid, &my_buf, 1);
+    buf.sem_num = 0;
+    buf.sem_op = -1;
+    buf.sem_flg = 0;
+    semop(semid, &buf, 1);
     // Поток передаёт отсортированные значения обратно в массив  в разделённой памяти
     for (int j = 0; j < n * k; ++j) {
         shared_mem->books[j + row_index * n * k] = row[j];
 
     }
-    my_buf.sem_num = 0;
-    my_buf.sem_op = 1;
-    my_buf.sem_flg = 0;
-    semop(semid, &my_buf, 1);
+    buf.sem_num = 0;
+    buf.sem_op = 1;
+    buf.sem_flg = 0;
+    semop(semid, &buf, 1);
 
     printf("Student %d have finished sorting his subcatalogue and passed it to the librarian.\n", row_index + 1);
     exit(0);
