@@ -24,7 +24,7 @@ typedef struct {
 static shm_struct *shared_mem;
 static sem_t *semaphore;
 
-int n, m, k; 
+int n, m, k;
 int shmid; // идентификатор разделяемой памяти.
 
 
@@ -37,7 +37,7 @@ void cleanup() {
 }
 
 void signal_handler(int signal) {
-    printf("Received signal %d\n", signal);
+    printf("Acquired signal %d\n", signal);
     cleanup();
     exit(0);
 }

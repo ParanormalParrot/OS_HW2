@@ -36,7 +36,7 @@ void cleanup() {
 }
 
 void signal_handler(int signal) {
-    printf("Received signal %d\n", signal);
+    printf("Acquired signal %d\n", signal);
     cleanup();
     exit(0);
 }
