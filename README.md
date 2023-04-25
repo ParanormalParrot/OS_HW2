@@ -27,11 +27,11 @@
 ## 7 баллов
 На 7 балла задача решена с использованием именованных семафоров POSIX и разделяемой памяти POSIX. Программа разделена на две части: 7points_librarian.c и 7points_student.c.  Для каждого процесса использует функцию exec для запуска 7points_student.c. (процессов-студентов). В качестве аргумента командной строки в 7points_student.c передаётся номер ряда.
 
-Программа может быть запущена с помощью следющих комманд:
+Программа может быть запущена с помощью следющий комманд: 
 ```
-- gcc 7points_librarian.c -o 7points_librarian
-- gcc 7points_student.c -o 7points_student -w
-- ./7points_librarian 3 1 5
+gcc 7points_librarian.c -o 7points_librarian
+gcc 7points_student.c -o 7points_student -w
+./7points_librarian 3 1 5
 ```
 
 ## 8 баллов
