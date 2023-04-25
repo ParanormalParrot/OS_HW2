@@ -78,16 +78,18 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < m; i++) {
         if (fork() == 0) { // дочерний процесс.
             sem_wait(semaphore);
+            // Процесс-студент создаёт подмассив массива книг.
             int row[n * k];
             for (int j = 0; j < n * k; ++j) {
                 row[j] = shared_mem->books[j + i * n * k];
             }
             sem_post(semaphore);
+            // Сортировка выбором
             for (int j = 0; j < n * k - 1; ++j) {
                 sem_wait(semaphore);
                 int min = j;
                 for (int l = j + 1; l < n * k; ++l) {
-                    if (row[j] < row[l]) {
+                    if (row[l] < row[min]) {
                         min = l;
                     }
                 }
@@ -105,7 +107,6 @@ int main(int argc, char *argv[]) {
 
             }
             sem_post(semaphore);
-
             printf("Student %d have finished sorting his subcatalogue and passed it to the librarian.\n", i + 1);
             exit(0);
         }

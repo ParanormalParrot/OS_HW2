@@ -52,16 +52,18 @@ int main(int argc, char *argv[]) {
     int m = shared_mem->m;
     int n = shared_mem->n;
     int k = shared_mem->k;
-    int row[n * k];;
+    // Процесс-студент создаёт подмассив массива книг.
+    int row[n * k];
     for (int j = 0; j < n * k; ++j) {
         row[j] = shared_mem->books[j + row_index * n * shared_mem->k];
     }
     sem_post(semaphore);
+    // Сортировка выбором
     for (int j = 0; j < n * k - 1; ++j) {
         sem_wait(semaphore);
         int min = j;
         for (int l = j + 1; l < n * k; ++l) {
-            if (row[j] < row[l]) {
+            if (row[l] < row[min]) {
                 min = l;
             }
         }

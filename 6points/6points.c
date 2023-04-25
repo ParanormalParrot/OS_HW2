@@ -84,6 +84,7 @@ int main(int argc, char *argv[]) {
             my_buf.sem_op = -1;
             my_buf.sem_flg = 0;
             semop(semid, &my_buf, 1);
+            // Процесс-студент создаёт подмассив массива книг.
             int row[n * k];
             for (int j = 0; j < n * k; ++j) {
                 row[j] = shared_mem->books[j + i * n * k];
@@ -92,6 +93,7 @@ int main(int argc, char *argv[]) {
             my_buf.sem_op = 1;
             my_buf.sem_flg = 0;
             semop(semid, &my_buf, 1);
+            // Сортировка выбором
             for (int j = 0; j < n * k - 1; ++j) {
                 my_buf.sem_num = 0;
                 my_buf.sem_op = -1;
@@ -99,7 +101,7 @@ int main(int argc, char *argv[]) {
                 semop(semid, &my_buf, 1);
                 int min = j;
                 for (int l = j + 1; l < n * k; ++l) {
-                    if (row[j] < row[l]) {
+                    if (row[l] < row[min]) {
                         min = l;
                     }
                 }
