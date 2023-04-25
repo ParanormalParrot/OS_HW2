@@ -54,6 +54,11 @@ int main(int argc, char *argv[]) {
     n = atoi(argv[2]);
     k = atoi(argv[3]);
 
+    if(m*n*k > 1000){
+        printf("Input values are too big\n");
+        return 1;
+    }
+
     // Обработка сигналов.
     signal(SIGINT, signal_handler);
 
@@ -79,7 +84,7 @@ int main(int argc, char *argv[]) {
         if (fork() == 0) { // дочерний процесс.
             char str[sizeof(int)];
             sprintf(str, "%d", i);
-            execl("./7points_student", "./7points_student", str, NULL);
+            execl("./8points_student", "./8points_student", str, NULL);
             exit(0);
         }
     }

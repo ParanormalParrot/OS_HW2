@@ -54,6 +54,11 @@ int main(int argc, char *argv[]) {
     n = atoi(argv[2]);
     k = atoi(argv[3]);
 
+    if(m*n*k > 1000){
+        printf("Input values are too big\n");
+        return 1;
+    }
+
     // Обработка сигналов.
     signal(SIGINT, signal_handler);
 
