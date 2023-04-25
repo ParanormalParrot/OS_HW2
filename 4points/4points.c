@@ -24,7 +24,7 @@ typedef struct {
 static shm_struct *shared_mem;
 static sem_t *semaphore;
 
-int n, m, k;
+int n, m, k; 
 int shmid; // идентификатор разделяемой памяти.
 
 
