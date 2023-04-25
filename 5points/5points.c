@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Создание семафора.
-    sem_init(&shared_mem->semaphore, 1, num_bees);
+    sem_init(&shared_mem->semaphore, 1, ARRAY_SIZE);
 
     // Создание дочерних процессов-студентов(их количество равно количеству рядов)
     for (int i = 0; i < m; i++) {
