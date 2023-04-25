@@ -120,6 +120,7 @@ int main(int argc, char *argv[]) {
             my_buf.sem_op = -1;
             my_buf.sem_flg = 0;
             semop(semid, &my_buf, 1);
+            // Поток передаёт отсортированные значения обратно в массив  в разделённой памяти
             for (int j = 0; j < n * k; ++j) {
                 shared_mem->books[j + i * n * k] = row[j];
 

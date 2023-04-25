@@ -74,6 +74,7 @@ int main(int argc, char *argv[]) {
         my_buf.sem_num = 0;
         my_buf.sem_op = -1;
         my_buf.sem_flg = 0;
+        semop(semid, &my_buf, 1);
         int min = j;
         for (int l = j + 1; l < n * k; ++l) {
             if (row[l] < row[min]) {
@@ -96,6 +97,8 @@ int main(int argc, char *argv[]) {
     my_buf.sem_num = 0;
     my_buf.sem_op = -1;
     my_buf.sem_flg = 0;
+    semop(semid, &my_buf, 1);
+    // Поток передаёт отсортированные значения обратно в массив  в разделённой памяти
     for (int j = 0; j < n * k; ++j) {
         shared_mem->books[j + row_index * n * k] = row[j];
 

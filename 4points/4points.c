@@ -102,6 +102,7 @@ int main(int argc, char *argv[]) {
                 sem_post(semaphore);
             }
             sem_wait(semaphore);
+            // Поток передаёт отсортированные значения обратно в массив  в разделённой памяти
             for (int j = 0; j < n * k; ++j) {
                 shared_mem->books[j + i * n * k] = row[j];
 
