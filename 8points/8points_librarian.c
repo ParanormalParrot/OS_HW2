@@ -9,10 +9,12 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/shm.h>
+#include <sys/sem.h>
 
 #define SHM_NAME "/shared_memory"
 #define SEM_NAME "/semaphore"
-#define ARRAY_SIZE 1024
+#define ARRAY_SIZE 1000
 
 // Структура для разделяемой памяти.
 typedef struct {
@@ -22,18 +24,17 @@ typedef struct {
 
 // Указатели на разделяемую память и семафор.
 static shm_struct *shared_mem;
-static sem_t *semaphore;
 
 int n, m, k;
 int shmid; // идентификатор разделяемой памяти.
+int semid; // идентификатор семафора.
 
 
 void cleanup() {
-    // Удаляем семафор и разделяемую память.
-    munmap(shared_mem, ARRAY_SIZE * sizeof(int));
-    shm_unlink(SHM_NAME);
-    sem_close(semaphore);
-    sem_unlink(SEM_NAME);
+    // Удаляем разделяемую память и семафор.
+    shmdt(shared_mem);
+    shmctl(shmid, IPC_RMID, NULL);
+    semctl(semid, 0, IPC_RMID);
 }
 
 void signal_handler(int signal) {
@@ -57,13 +58,14 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, signal_handler);
 
     // Создание семафора.
-    semaphore = sem_open(SEM_NAME, O_CREAT, 0644, ARRAY_SIZE);
+    key_t semkey = ftok("semfile", 1);
+    semid = semget(semkey, 2, 0666 | IPC_CREAT);
+    semctl(semid, 0, SETVAL, ARRAY_SIZE);
 
     // Создание разделяемой памяти.
-    shmid = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0644);
-    int ft2 = ftruncate(shmid, sizeof(shm_struct));
-    shared_mem = mmap(NULL, sizeof(shm_struct), PROT_READ | PROT_WRITE, MAP_SHARED, shmid, 0);
-    close(shmid);
+    key_t shmkey = ftok("shmfile", 1);
+    shmid = shmget(shmkey, sizeof(shm_struct), 0644 | IPC_CREAT);
+    shared_mem = (shm_struct *) shmat(shmid, NULL, 0);
     for (int i = 0; i < m * n * k; ++i) {
         shared_mem->books[i] = rand() % 1000;
     }

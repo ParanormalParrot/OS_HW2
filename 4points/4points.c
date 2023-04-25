@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
             int i = 0;
             i < m * n * k;
             ++i) {
-        printf("Book %d at the position %d of the bookshelf %d in the row %d.\n", shared_mem->books[i], (i / m)+1, (i / n / m)+1, (i % k)+1);
+        printf("Book %d at the position %d of the bookshelf %d in the row %d.\n", shared_mem->books[i], (i % k)+1, (i / k % n)+1, (i / k / n)+1);
 
     }
 

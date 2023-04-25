@@ -9,10 +9,12 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/shm.h>
+#include <sys/sem.h>
 
 #define SHM_NAME "/shared_memory"
 #define SEM_NAME "/semaphore"
-#define ARRAY_SIZE 1024
+#define ARRAY_SIZE 1000
 
 // Структура для разделяемой памяти.
 typedef struct {
@@ -22,11 +24,11 @@ int m, n, k;
 
 // Указатели на разделяемую память и семафор.
 static shm_struct *shared_mem;
-static sem_t *semaphore;
+
 
 int row_index;
 int shmid; // идентификатор разделяемой памяти.
-
+int semid;
 
 int main(int argc, char *argv[]) {
     srand(time(NULL));
@@ -39,16 +41,22 @@ int main(int argc, char *argv[]) {
     row_index = atoi(argv[1]);
 
 
-    // Создание семафора.
-    semaphore = sem_open(SEM_NAME, O_RDWR);
+    // Открытие семафора.
+    key_t semkey = ftok("semfile", 1);
+    semid = semget(semkey, 1, 0666);
+    struct sembuf my_buf;
 
-    // Создание разделяемой памяти.
-    shmid = shm_open("/shared_memory", O_RDWR, 0);
-    shared_mem = mmap(NULL, sizeof(shm_struct), PROT_READ | PROT_WRITE, MAP_SHARED, shmid, 0);
+    // Открытие разделяемой памяти.
+    key_t shmkey = ftok("shmfile", 1);
+    shmid = shmget(shmkey, sizeof(shm_struct), 0644);
+    shared_mem = (shm_struct *) shmat(shmid, NULL, 0);
 
 
     // Создание дочерних процессов-студентов(их количество равно количеству рядов)
-    sem_wait(semaphore);
+    my_buf.sem_num = 0;
+    my_buf.sem_op = -1;
+    my_buf.sem_flg = 0;
+    semop(semid, &my_buf, 1);
     int m = shared_mem->m;
     int n = shared_mem->n;
     int k = shared_mem->k;
@@ -56,9 +64,14 @@ int main(int argc, char *argv[]) {
     for (int j = 0; j < n * k; ++j) {
         row[j] = shared_mem->books[j + row_index * n * shared_mem->k];
     }
-    sem_post(semaphore);
+    my_buf.sem_num = 0;
+    my_buf.sem_op = 1;
+    my_buf.sem_flg = 0;
+    semop(semid, &my_buf, 1);
     for (int j = 0; j < n * k - 1; ++j) {
-        sem_wait(semaphore);
+        my_buf.sem_num = 0;
+        my_buf.sem_op = -1;
+        my_buf.sem_flg = 0;
         int min = j;
         for (int l = j + 1; l < n * k; ++l) {
             if (row[j] < row[l]) {
@@ -72,14 +85,23 @@ int main(int argc, char *argv[]) {
                row[j],
                (j % k + 1), (j / n + 1), row_index + 1);
         usleep(rand() % 10);
-        sem_post(semaphore);
+        my_buf.sem_num = 0;
+        my_buf.sem_op = 1;
+        my_buf.sem_flg = 0;
+        semop(semid, &my_buf, 1);
+
     }
-    sem_wait(semaphore);
+    my_buf.sem_num = 0;
+    my_buf.sem_op = -1;
+    my_buf.sem_flg = 0;
     for (int j = 0; j < n * k; ++j) {
         shared_mem->books[j + row_index * n * k] = row[j];
 
     }
-    sem_post(semaphore);
+    my_buf.sem_num = 0;
+    my_buf.sem_op = 1;
+    my_buf.sem_flg = 0;
+    semop(semid, &my_buf, 1);
 
     printf("Student %d have finished sorting his subcatalogue and passed it to the librarian.\n", row_index + 1);
     exit(0);
